@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CORE-MIND | Personal OS</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#58a6ff">
+    <style>
+        :root {
+            --bg: #0d1117;
+            --core: #58a6ff;
+            --wdt-ok: #238636;
+            --wdt-warning: #d29922;
+            --wdt-reset: #da3633;
+            --text: #c9d1d9;
+            --card: #161b22;
+        }
+
+        body { 
+            font-family: 'Courier New', Courier, monospace; 
+            background: var(--bg); 
+            color: var(--text); 
+            display: flex; 
+            justify-content: center; 
+            margin: 0;
+            padding: 20px; 
+        }
+
+        .os-container { 
+            border: 1px solid var(--core); 
+            width: 100%; 
+            max-width: 450px; 
+            padding: 25px; 
+            border-radius: 12px; 
+            box-shadow: 0 0 20px rgba(88, 166, 255, 0.15); 
+            background: var(--card);
+        }
+
+        .header { 
+            border-bottom: 2px solid var(--core); 
+            padding-bottom: 15px; 
+            margin-bottom: 25px; 
+            text-align: center;
+            letter-spacing: 2px;
+            font-weight: bold;
+        }
+
+        .status-box { 
+            padding: 15px; 
+            text-align: center; 
+            margin-bottom: 25px; 
+            font-weight: bold; 
+            border-radius: 6px;
+            text-transform: uppercase;
+            transition: 0.5s;
+        }
+
+        .green { background: var(--wdt-ok); color: white; border: 1px solid #2ea043; }
+        .yellow { background: var(--wdt-warning); color: black; border: 1px solid #e3b341; }
+        .red { background: var(--wdt-reset); color: white; border: 1px solid #f85149; }
+
+        .mvdt-btn { 
+            width: 100%; 
+            padding: 18px; 
+            background: transparent; 
+            border: 1px solid var(--core); 
+            color: var(--core); 
+            font-weight: bold;
+            font-family: inherit;
+            cursor: pointer; 
+            transition: 0.3s;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+
+        .mvdt-btn:hover { 
+            background: var(--core); 
+            color: var(--bg); 
+            box-shadow: 0 0 10px var(--core);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: #0d1117;
+            padding: 10px;
+            border: 1px solid #30363d;
+            border-radius: 4px;
+            text-align: center;
+        }
+
+        .stat-label { font-size: 0.7em; color: #8b949e; display: block; }
+        .stat-value { font-size: 1.2em; color: var(--core); font-weight: bold; }
+
+        .log-header { font-size: 0.8em; color: var(--core); margin-bottom: 5px; }
+        .log-area { 
+            height: 120px; 
+            overflow-y: auto; 
+            background: #010409; 
+            padding: 12px; 
+            font-size: 0.75em; 
+            border: 1px solid #30363d;
+            border-radius: 4px;
+            line-height: 1.5;
+        }
+
+        .footer {
+            margin-top: 25px;
+            text-align: center;
+            font-size: 0.6em;
+            color: #484f58;
+        }
+    </style>
+</head>
+<body>
+
+<div class="os-container">
+    <div class="header">
+        CORE-MIND OS v1.0
+    </div>
+
+    <div id="wdt-status" class="status-box green">SYSTEM RUNNING</div>
+
+    <button class="mvdt-btn" onclick="executeCheckIn()">EXECUTE MVDT</button>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <span class="stat-label">STREAK</span>
+            <span id="streak" class="stat-value">0</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-label">WDT STATUS</span>
+            <span id="timer-status" class="stat-value">NOMINAL</span>
+        </div>
+    </div>
+
+    <div class="log-header">> REVERSE_ENG_LOGS:</div>
+    <div id="log" class="log-area"></div>
+
+    <div class="footer">
+        VERTICAL INTEGRATION // OFFLINE SMART ALGO // 2050
+    </div>
+</div>
+
+<script>
+    /* CORE LOGIC - EMBEDDED MINDSET 
+       Separation of concerns: Logic is decoupled from UI.
+    */
+    const CORE = {
+        config: {
+            storageKey: 'core_mind_data'
+        },
+
+        init: function() {
+            this.checkWDT();
+            this.registerSW();
+            this.updateUI();
+        },
+
+        getStorage: function() {
+            return JSON.parse(localStorage.getItem(this.config.storageKey)) || 
+                   { streak: 0, lastDate: null, logs: [] };
+        },
+
+        saveStorage: function(data) {
+            localStorage.setItem(this.config.storageKey, JSON.stringify(data));
+        },
+
+        checkWDT: function() {
+            const data = this.getStorage();
+            if (!data.lastDate) return;
+
+            const now = new Date();
+            const last = new Date(data.lastDate);
+            
+            // Logik kiraan hari (Embedded style rounding)
+            const diffInTime = now.getTime() - last.getTime();
+            const diffInDays = Math.floor(diffInTime / (1000 * 3600 * 24));
+
+            const statusEl = document.getElementById('wdt-status');
+            const timerStatEl = document.getElementById('timer-status');
+
+            if (diffInDays >= 2) {
+                // HARD RESET: WDT triggered
+                statusEl.className = "status-box red";
+                statusEl.innerText = "WDT RESET: REBOOTED";
+                timerStatEl.innerText = "CRITICAL";
+                if(data.streak > 0) {
+                    this.addLog("CRITICAL: WDT Reset triggered. Streak lost.");
+                    data.streak = 0;
+                }
+            } else if (diffInDays === 1) {
+                // WARNING: 1 Day Skip
+                statusEl.className = "status-box yellow";
+                statusEl.innerText = "WDT WARNING: IDLE";
+                timerStatEl.innerText = "WARNING";
+            } else {
+                statusEl.className = "status-box green";
+                statusEl.innerText = "SYSTEM RUNNING";
+                timerStatEl.innerText = "NOMINAL";
+            }
+            this.saveStorage(data);
+        },
+
+        addLog: function(msg) {
+            const data = this.getStorage();
+            const now = new Date();
+            const timeStamp = now.getHours().toString().padStart(2, '0') + ":" + 
+                              now.getMinutes().toString().padStart(2, '0');
+            
+            data.logs.unshift(`[${timeStamp}] ${msg}`);
+            if (data.logs.length > 20) data.logs.pop(); // Memory management
+            this.saveStorage(data);
+            this.updateUI();
+        },
+
+        updateUI: function() {
+            const data = this.getStorage();
+            document.getElementById('streak').innerText = data.streak;
+            document.getElementById('log').innerHTML = data.logs.map(l => `<div>${l}</div>`).join('');
+        },
+
+        registerSW: function() {
+            if ('serviceWorker' in navigator) {
+                window.addEventListener('load', () => {
+                    navigator.serviceWorker.register('sw.js')
+                    .then(reg => console.log('SW Registered'))
+                    .catch(err => console.log('SW Failed', err));
+                });
+            }
+        }
+    };
+
+    function executeCheckIn() {
+        const data = CORE.getStorage();
+        const today = new Date().toDateString();
+
+        if (data.lastDate === today) {
+            CORE.addLog("MVDT: Task already verified for today.");
+            return;
+        }
+
+        data.streak++;
+        data.lastDate = today;
+        CORE.saveStorage(data);
+        CORE.addLog("MVDT EXEC: Logik diperkukuh. Streak: " + data.streak);
+        CORE.checkWDT();
+        CORE.updateUI();
+    }
+
+    // Initialize System
+    CORE.init();
+</script>
+
+</body>
+</html>
