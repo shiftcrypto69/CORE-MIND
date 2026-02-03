@@ -125,6 +125,20 @@
         CORE-MIND OS v1.0
     </div>
 
+    <div style="text-align: center; margin-bottom: 20px;">
+        <svg width="80" height="80" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="10" y="10" width="80" height="80" rx="10" stroke="#58a6ff" stroke-width="2"/>
+            <rect x="35" y="35" width="30" height="30" rx="2" fill="#58a6ff" opacity="0.8">
+                <animate attributeName="opacity" values="0.4;1;0.4" dur="3s" repeatCount="indefinite" />
+            </rect>
+            <path d="M50 10V35M50 65V90M10 50H35M65 50H90" stroke="#58a6ff" stroke-width="2" stroke-linecap="round"/>
+            <circle cx="50" cy="10" r="3" fill="#58a6ff"/>
+            <circle cx="50" cy="90" r="3" fill="#58a6ff"/>
+            <circle cx="10" cy="50" r="3" fill="#58a6ff"/>
+            <circle cx="90" cy="50" r="3" fill="#58a6ff"/>
+        </svg>
+    </div>
+
     <div id="wdt-status" class="status-box green">SYSTEM RUNNING</div>
 
     <button class="mvdt-btn" onclick="executeCheckIn()">EXECUTE MVDT</button>
@@ -152,7 +166,7 @@
     const CORE = {
         config: {
             storageKey: 'core_mind_data',
-            version: '1.0.2' // Tukar versi ini untuk paksa refresh cache browser
+            version: '1.0.3' 
         },
 
         init: function() {
@@ -185,7 +199,6 @@
             const now = new Date();
             const last = new Date(data.lastDate);
             
-            // Perbandingan hari (UTC)
             const diffInTime = now.setHours(0,0,0,0) - last.setHours(0,0,0,0);
             const diffInDays = Math.round(diffInTime / (1000 * 3600 * 24));
 
@@ -232,7 +245,7 @@
             if ('serviceWorker' in navigator) {
                 window.addEventListener('load', () => {
                     navigator.serviceWorker.register('./sw.js')
-                    .then(reg => console.log('SW Registered'))
+                    .then(reg => console.log('SW Registered: Scope is ' + reg.scope))
                     .catch(err => console.error('SW Registration Failed', err));
                 });
             }
@@ -256,7 +269,6 @@
         CORE.updateUI();
     }
 
-    // Launch System
     CORE.init();
 </script>
 
