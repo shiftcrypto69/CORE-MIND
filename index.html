@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CORE-MIND | Personal OS</title>
-    <link rel="manifest" href="manifest.json">
+    <link rel="manifest" href="./manifest.json">
     <meta name="theme-color" content="#58a6ff">
     <style>
         :root {
@@ -100,7 +100,7 @@
 
         .log-header { font-size: 0.8em; color: var(--core); margin-bottom: 5px; }
         .log-area { 
-            height: 120px; 
+            height: 150px; 
             overflow-y: auto; 
             background: #010409; 
             padding: 12px; 
@@ -149,18 +149,18 @@
 </div>
 
 <script>
-    /* CORE LOGIC - EMBEDDED MINDSET 
-       Separation of concerns: Logic is decoupled from UI.
-    */
     const CORE = {
         config: {
-            storageKey: 'core_mind_data'
+            storageKey: 'core_mind_data',
+            version: '1.0.2' // Tukar versi ini untuk paksa refresh cache browser
         },
 
         init: function() {
+            console.log("CORE-MIND Initializing version: " + this.config.version);
             this.checkWDT();
             this.registerSW();
             this.updateUI();
+            this.addLog("SYSTEM BOOT: v" + this.config.version + " initialized.");
         },
 
         getStorage: function() {
@@ -174,29 +174,30 @@
 
         checkWDT: function() {
             const data = this.getStorage();
-            if (!data.lastDate) return;
+            const statusEl = document.getElementById('wdt-status');
+            const timerStatEl = document.getElementById('timer-status');
+
+            if (!data.lastDate) {
+                this.addLog("WDT: Awaiting first execution.");
+                return;
+            }
 
             const now = new Date();
             const last = new Date(data.lastDate);
             
-            // Logik kiraan hari (Embedded style rounding)
-            const diffInTime = now.getTime() - last.getTime();
-            const diffInDays = Math.floor(diffInTime / (1000 * 3600 * 24));
-
-            const statusEl = document.getElementById('wdt-status');
-            const timerStatEl = document.getElementById('timer-status');
+            // Perbandingan hari (UTC)
+            const diffInTime = now.setHours(0,0,0,0) - last.setHours(0,0,0,0);
+            const diffInDays = Math.round(diffInTime / (1000 * 3600 * 24));
 
             if (diffInDays >= 2) {
-                // HARD RESET: WDT triggered
                 statusEl.className = "status-box red";
                 statusEl.innerText = "WDT RESET: REBOOTED";
                 timerStatEl.innerText = "CRITICAL";
                 if(data.streak > 0) {
-                    this.addLog("CRITICAL: WDT Reset triggered. Streak lost.");
+                    this.addLog("WDT RESET: Failure detected. Resetting streak.");
                     data.streak = 0;
                 }
             } else if (diffInDays === 1) {
-                // WARNING: 1 Day Skip
                 statusEl.className = "status-box yellow";
                 statusEl.innerText = "WDT WARNING: IDLE";
                 timerStatEl.innerText = "WARNING";
@@ -215,7 +216,7 @@
                               now.getMinutes().toString().padStart(2, '0');
             
             data.logs.unshift(`[${timeStamp}] ${msg}`);
-            if (data.logs.length > 20) data.logs.pop(); // Memory management
+            if (data.logs.length > 20) data.logs.pop();
             this.saveStorage(data);
             this.updateUI();
         },
@@ -223,15 +224,16 @@
         updateUI: function() {
             const data = this.getStorage();
             document.getElementById('streak').innerText = data.streak;
-            document.getElementById('log').innerHTML = data.logs.map(l => `<div>${l}</div>`).join('');
+            const logEl = document.getElementById('log');
+            logEl.innerHTML = data.logs.map(l => `<div>${l}</div>`).join('');
         },
 
         registerSW: function() {
             if ('serviceWorker' in navigator) {
                 window.addEventListener('load', () => {
-                    navigator.serviceWorker.register('sw.js')
+                    navigator.serviceWorker.register('./sw.js')
                     .then(reg => console.log('SW Registered'))
-                    .catch(err => console.log('SW Failed', err));
+                    .catch(err => console.error('SW Registration Failed', err));
                 });
             }
         }
@@ -242,19 +244,19 @@
         const today = new Date().toDateString();
 
         if (data.lastDate === today) {
-            CORE.addLog("MVDT: Task already verified for today.");
+            CORE.addLog("MVDT: Task verified for today.");
             return;
         }
 
         data.streak++;
         data.lastDate = today;
         CORE.saveStorage(data);
-        CORE.addLog("MVDT EXEC: Logik diperkukuh. Streak: " + data.streak);
+        CORE.addLog("MVDT SUCCESS: Streak " + data.streak + " active.");
         CORE.checkWDT();
         CORE.updateUI();
     }
 
-    // Initialize System
+    // Launch System
     CORE.init();
 </script>
 
